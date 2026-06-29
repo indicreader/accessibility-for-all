@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessibility Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-panel: rgba(17, 24, 39, 0.95);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --accent: #60a5fa;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      width: 380px;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    .container {
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      max-height: 580px;
+      overflow-y: auto;
+    }
+
+    /* Scrollbar */
+    .container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .container::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    .container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+    .container::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-logo {
+      font-size: 24px;
+    }
+
+    .header-text h1 {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.75px;
+      text-transform: uppercase;
+    }
+
+    .header-text p {
+      font-size: 9px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 1px;
+    }
+
+    .main-body {
+      padding: 16px;
+    }
+
+    /* Adjusters styling */
+    .adjuster-section {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .adjuster-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .adjuster-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .adjuster-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .adjuster-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-small {
+      width: 30px;
+      height: 30px;
+      background: #334155;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-small:hover {
+      background: #475569;
+    }
+    .btn-small:active {
+      transform: scale(0.9);
+    }
+
+    .adjuster-value {
+      font-size: 12px;
+      font-weight: 700;
+      width: 32px;
+      text-align: center;
+      color: var(--accent);
+    }
+
+    /* Grid Layout */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+
+    .feature-card:hover {
+      background: rgba(51, 65, 85, 0.6);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .feature-card:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    .feature-card .icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .feature-card .title {
+      font-weight: 600;
+      font-size: 11px;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .feature-card .status {
+      font-size: 8px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.5);
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Active states */
+    .feature-card.enabled {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-color: #60a5fa;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .feature-card.enabled .title {
+      color: #ffffff;
+    }
+
+    .feature-card.enabled .status {
+      background: #ffffff;
+      color: #1d4ed8;
+    }
+
+    /* Full width features */
+    .feature-row-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 10px;
+      user-select: none;
+    }
+
+    .feature-row-card:hover {
+      background: rgba(51, 65, 85, 0.6);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .feature-row-card.enabled {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-color: #60a5fa;
+    }
+
+    .feature-row-card .icon {
+      font-size: 24px;
+    }
+
+    .feature-row-info {
+      flex: 1;
+      text-align: left;
+    }
+
+    .feature-row-info .title {
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--text-main);
+    }
+
+    .feature-row-info .desc {
+      font-size: 9px;
+      color: var(--text-sub);
+      margin-top: 1px;
+    }
+
+    .feature-row-card.enabled .desc {
+      color: #bfdbfe;
+    }
+
+    .feature-row-card .status {
+      font-size: 8px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.5);
+      color: var(--text-sub);
+      text-transform: uppercase;
+    }
+
+    .feature-row-card.enabled .status {
+      background: #ffffff;
+      color: #1d4ed8;
+    }
+
+    footer {
+      display: flex;
+      justify-content: center;
+      margin-top: 6px;
+      padding: 0 16px 16px 16px;
+    }
+
+    .reset-btn {
+      width: 100%;
+      background: var(--danger);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .reset-btn:hover {
+      background: var(--danger-hover);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-title">
+        <span class="header-logo">♿</span>
+        <div class="header-text">
+          <h1 id="pop-header-title">Accessibility Companion</h1>
+          <p id="pop-header-sub">RPwD Act / GIGW Compliant</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-body">
+      <!-- Adjusters (Font size, spacing, line heights) -->
+      <div class="adjuster-section">
+        <div class="adjuster-row">
+          <span id="label-fontsize" class="adjuster-label">Font Size Scale</span>
+          <div class="adjuster-controls">
+            <button id="pop-font-down" class="btn-small">-</button>
+            <span id="val-fontsize" class="adjuster-value">0</span>
+            <button id="pop-font-up" class="btn-small">+</button>
+          </div>
+        </div>
+        
+        <div class="adjuster-row">
+          <span id="label-letterspacing" class="adjuster-label">Letter Spacing</span>
+          <div class="adjuster-controls">
+            <button id="pop-spacing-down" class="btn-small">-</button>
+            <span id="val-letterspacing" class="adjuster-value">0</span>
+            <button id="pop-spacing-up" class="btn-small">+</button>
+          </div>
+        </div>
+
+        <div class="adjuster-row">
+          <span id="label-lineheight" class="adjuster-label">Line Spacing</span>
+          <div class="adjuster-controls">
+            <button id="pop-line-down" class="btn-small">-</button>
+            <span id="val-lineheight" class="adjuster-value">0</span>
+            <button id="pop-line-up" class="btn-small">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Grid -->
+      <div class="features-grid">
+        <div id="pop-contrast" class="feature-card" style="gap: 4px; padding-bottom: 8px;">
+          <div class="icon">🌗</div>
+          <div id="title-contrast" class="title">High Contrast</div>
+          <select id="pop-select-contrast" style="background: #1e293b; color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; font-size: 10px; font-weight: 700; padding: 4px 6px; width: 100%; box-sizing: border-box; text-align: center; cursor: pointer;">
+            <!-- populated by script -->
+          </select>
+        </div>
+
+        <div id="pop-cursor" class="feature-card">
+          <div class="icon">🏹</div>
+          <div id="title-cursor" class="title">Large Cursor</div>
+          <div id="status-cursor" class="status">Off</div>
+        </div>
+
+        <div id="pop-dyslexia" class="feature-card">
+          <div class="icon">📖</div>
+          <div id="title-dyslexia" class="title">Dyslexia Font</div>
+          <div id="status-dyslexia" class="status">Off</div>
+        </div>
+
+        <div id="pop-adhd" class="feature-card">
+          <div class="icon">🎯</div>
+          <div id="title-adhd" class="title">ADHD Focus</div>
+          <div id="status-adhd" class="status">Off</div>
+        </div>
+
+        <div id="pop-ruler" class="feature-card">
+          <div class="icon">📏</div>
+          <div id="title-ruler" class="title">Reading Ruler</div>
+          <div id="status-ruler" class="status">Off</div>
+        </div>
+
+        <div id="pop-links" class="feature-card">
+          <div class="icon">🔗</div>
+          <div id="title-links" class="title">Highlight Links</div>
+          <div id="status-links" class="status">Off</div>
+        </div>
+
+        <div id="pop-headings" class="feature-card">
+          <div class="icon">🏷️</div>
+          <div id="title-headings" class="title">Highlight Headings</div>
+          <div id="status-headings" class="status">Off</div>
+        </div>
+
+        <div id="pop-keyboard" class="feature-card">
+          <div class="icon">⌨️</div>
+          <div id="title-keyboard" class="title">Keyboard Helper</div>
+          <div id="status-keyboard" class="status">Off</div>
+        </div>
+
+        <div id="pop-animations" class="feature-card">
+          <div class="icon">🛑</div>
+          <div id="title-animations" class="title">Pause Animations</div>
+          <div id="status-animations" class="status">Off</div>
+        </div>
+
+        <div id="pop-imagehide" class="feature-card">
+          <div class="icon">🖼️</div>
+          <div id="title-imagehide" class="title">Text-Only Images</div>
+          <div id="status-imagehide" class="status">Off</div>
+        </div>
+      </div>
+
+      <!-- Text Reader Row -->
+      <div id="pop-speech" class="feature-row-card">
+        <div class="icon">🔊</div>
+        <div class="feature-row-info">
+          <div id="title-speech" class="title">Screen Text Reader</div>
+          <div id="desc-speech" class="desc">Off</div>
+        </div>
+        <div id="status-speech" class="status">Off</div>
+      </div>
+
+      <!-- Voice Commands Row -->
+      <div id="pop-voice" class="feature-row-card">
+        <div class="icon">🎙️</div>
+        <div class="feature-row-info">
+          <div id="title-voice" class="title">Voice Navigation</div>
+          <div id="desc-voice" class="desc">Off</div>
+        </div>
+        <div id="status-voice" class="status">Off</div>
+      </div>
+    </div>
+
+    <footer>
+      <button id="pop-reset-btn" class="reset-btn">Reset All Settings</button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
