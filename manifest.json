@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Universal Web Accessibility Companion (RPwD Compliant)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An advanced, multilingual web accessibility overlay helper in compliance with India's RPwD Act / GIGW guidelines.",
   "permissions": [
     "storage",
@@ -21,9 +21,15 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "css": ["content.css"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_end"
     }
   ],
