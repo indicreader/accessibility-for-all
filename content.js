@@ -483,16 +483,23 @@
                 </div>
 
                 <div class="access-companion-grid">
-                    <div id="card-contrast" class="access-companion-card ${state.highContrast !== 'off' ? 'enabled' : ''}" style="gap: 4px; padding-bottom: 8px;">
-                        <div class="icon">🌗</div>
-                        <div class="title">${t.highContrast}</div>
-                        <select id="select-contrast" style="background: #1e293b; color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; font-size: 10px; font-weight: 700; padding: 4px 6px; width: 100%; box-sizing: border-box; text-align: center; cursor: pointer;">
-                            <option value="off" ${state.highContrast === 'off' ? 'selected' : ''}>${t.contrastOff}</option>
-                            <option value="high-contrast" ${state.highContrast === 'high-contrast' ? 'selected' : ''}>${t.contrastYellow}</option>
-                            <option value="inverted" ${state.highContrast === 'inverted' ? 'selected' : ''}>${t.contrastInverted}</option>
-                            <option value="grayscale" ${state.highContrast === 'grayscale' ? 'selected' : ''}>${t.contrastGrayscale}</option>
-                            <option value="dark-mono" ${state.highContrast === 'dark-mono' ? 'selected' : ''}>${t.contrastDarkMono}</option>
-                        </select>
+                    <div class="access-contrast-card-wrapper">
+                        <div id="card-contrast"
+                             class="access-companion-card ${state.highContrast !== 'off' ? 'enabled' : ''}"
+                             role="button"
+                             aria-haspopup="listbox"
+                             aria-expanded="false"
+                             aria-label="High Contrast mode: ${state.highContrast === 'off' ? (t.contrastOff || 'Off') : state.highContrast}"
+                             tabindex="0">
+                            <div class="icon">🌗</div>
+                            <div class="title">${t.highContrast}</div>
+                            <div class="status">${state.highContrast !== 'off' ? ({
+                                'high-contrast': t.contrastYellow || 'Yellow on Black',
+                                'inverted': t.contrastInverted || 'Inverted',
+                                'grayscale': t.contrastGrayscale || 'Grayscale',
+                                'dark-mono': t.contrastDarkMono || 'Dark Mono'
+                            }[state.highContrast] || state.highContrast) : (t.statusOff || 'Off')}</div>
+                        </div>
                     </div>
                     
                     <div id="card-cursor" class="access-companion-card ${state.largeCursor ? 'enabled' : ''}">
@@ -587,16 +594,97 @@
         document.getElementById('adjust-line-up').onclick = () => updateStateField('lineHeightDelta', Math.min(6, state.lineHeightDelta + 1));
         document.getElementById('adjust-line-down').onclick = () => updateStateField('lineHeightDelta', Math.max(0, state.lineHeightDelta - 1));
 
-        // Toggles
-        document.getElementById('select-contrast').onchange = (e) => {
-            updateStateField('highContrast', e.target.value);
-        };
-        // Clicking card targets select focus
+        // Toggles — Contrast uses custom accessible picker
+        const contrastOptions = [
+            { value: 'off',           label: t.contrastOff    || 'Normal / Off',          desc: 'Default website colours',       swatch: '⬜', bg: '#f8fafc', fg: '#0f172a' },
+            { value: 'high-contrast', label: t.contrastYellow || 'Yellow on Black',        desc: 'Maximum visibility, WCAG AAA',  swatch: '🟡', bg: '#000000', fg: '#ffff00' },
+            { value: 'inverted',      label: t.contrastInverted || 'Inverted Colors',      desc: 'Colours flipped for dark pages', swatch: '🔄', bg: '#ffffff', fg: '#000000' },
+            { value: 'grayscale',     label: t.contrastGrayscale || 'Grayscale',           desc: 'Remove all colour distraction',  swatch: '🩶', bg: '#888888', fg: '#ffffff' },
+            { value: 'dark-mono',     label: t.contrastDarkMono || 'Dark Monochromatic',   desc: 'Soft dark theme, easy on eyes',  swatch: '🌑', bg: '#121212', fg: '#b3b3b3' }
+        ];
+
+        function openContrastPicker() {
+            closeContrastPicker();
+            const wrapper = document.querySelector('.access-contrast-card-wrapper');
+            if (!wrapper) return;
+
+            const picker = document.createElement('div');
+            picker.className = 'access-contrast-picker';
+            picker.id = 'access-contrast-picker';
+            picker.setAttribute('role', 'listbox');
+            picker.setAttribute('aria-label', t.highContrast || 'High Contrast Mode');
+
+            const header = document.createElement('div');
+            header.className = 'access-contrast-picker-header';
+            header.textContent = t.highContrast || 'Choose Contrast Mode';
+            picker.appendChild(header);
+
+            contrastOptions.forEach((opt, idx) => {
+                const row = document.createElement('div');
+                row.className = 'access-contrast-option' + (state.highContrast === opt.value ? ' selected' : '');
+                row.setAttribute('role', 'option');
+                row.setAttribute('aria-selected', state.highContrast === opt.value ? 'true' : 'false');
+                row.setAttribute('tabindex', state.highContrast === opt.value ? '0' : '-1');
+                row.dataset.value = opt.value;
+                row.innerHTML = `
+                    <div class="access-contrast-swatch" style="background:${opt.bg}; color:${opt.fg}; font-size:12px;">${opt.swatch}</div>
+                    <div class="access-contrast-option-text">
+                        <div class="access-contrast-option-label">${opt.label}</div>
+                        <div class="access-contrast-option-desc">${opt.desc}</div>
+                    </div>
+                    <div class="access-contrast-check">✓</div>
+                `;
+                row.addEventListener('click', () => {
+                    updateStateField('highContrast', opt.value);
+                    closeContrastPicker();
+                });
+                row.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        updateStateField('highContrast', opt.value);
+                        closeContrastPicker();
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const opts = picker.querySelectorAll('.access-contrast-option');
+                        const next = opts[idx + 1];
+                        if (next) next.focus();
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const opts = picker.querySelectorAll('.access-contrast-option');
+                        const prev = opts[idx - 1];
+                        if (prev) prev.focus();
+                    } else if (e.key === 'Escape') {
+                        closeContrastPicker();
+                        document.getElementById('card-contrast')?.focus();
+                    }
+                });
+                picker.appendChild(row);
+            });
+
+            wrapper.appendChild(picker);
+            document.getElementById('card-contrast').setAttribute('aria-expanded', 'true');
+
+            // Focus the currently selected option
+            const selected = picker.querySelector('.access-contrast-option.selected');
+            if (selected) selected.focus();
+            else picker.querySelector('.access-contrast-option')?.focus();
+        }
+
+        function closeContrastPicker() {
+            const existing = document.getElementById('access-contrast-picker');
+            if (existing) existing.remove();
+            document.getElementById('card-contrast')?.setAttribute('aria-expanded', 'false');
+        }
+
         document.getElementById('card-contrast').onclick = (e) => {
-            if (e.target.id !== 'select-contrast') {
-                document.getElementById('select-contrast').focus();
-            }
+            e.stopPropagation();
+            const picker = document.getElementById('access-contrast-picker');
+            if (picker) { closeContrastPicker(); }
+            else { openContrastPicker(); }
         };
+        document.getElementById('card-contrast').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openContrastPicker(); }
+        });
 
         document.getElementById('card-cursor').onclick = () => updateStateField('largeCursor', !state.largeCursor);
         document.getElementById('card-dyslexia').onclick = () => updateStateField('dyslexicFont', !state.dyslexicFont);

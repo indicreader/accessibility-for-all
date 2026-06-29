@@ -1,31 +1,148 @@
-name: Package and Release Extension
+name: Build & Release Extension
 
 on:
+  # Manual trigger — pick the bump type from the UI
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+  # Also run automatically on every push to main (as patch bump)
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+    paths:
+      - "*.js"
+      - "*.css"
+      - "*.html"
+      - "manifest.json"
 
 permissions:
-  contents: write
+  contents: write   # needed to push the version commit and create releases
 
 jobs:
-  release:
-    name: Create Release and Upload Asset
+  # ─────────────────────────────────────────────────────────────────────────
+  build-and-release:
+    name: Build ZIP & Publish Release
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout full history so we can commit version bumps back
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build extension zip
+      # 2. Read current version from manifest.json
+      - name: Read current version
+        id: current_version
         run: |
-          zip -r inf-scroll-pro.zip background.js content.js manifest.json options.css options.html options.js popup.css popup.html popup.js icons README.md LICENSE
+          VERSION=$(jq -r '.version' manifest.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current version: $VERSION"
 
-      - name: Create Release
-        id: create_release
+      # 3. Compute next version (semver bump)
+      - name: Bump version
+        id: bump_version
+        run: |
+          CURRENT="${{ steps.current_version.outputs.version }}"
+          BUMP="${{ github.event.inputs.bump || 'patch' }}"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Bumped $CURRENT -> $NEW_VERSION ($BUMP)"
+
+      # 4. Write new version into manifest.json
+      - name: Update manifest.json version
+        run: |
+          NEW="${{ steps.bump_version.outputs.new_version }}"
+          jq --arg v "$NEW" '.version = $v' manifest.json > manifest.tmp.json
+          mv manifest.tmp.json manifest.json
+          echo "manifest.json updated to version $NEW"
+
+      # 5. Build the ZIP — only the extension files that Chrome actually needs
+      - name: Build extension ZIP
+        run: |
+          ZIP_NAME="accessibility-companion-v${{ steps.bump_version.outputs.new_version }}.zip"
+          echo "Building $ZIP_NAME …"
+
+          zip -r "$ZIP_NAME" \
+            manifest.json \
+            background.js \
+            content.js \
+            content.css \
+            popup.html \
+            popup.js \
+            icon.png \
+            icon16.png \
+            icon48.png \
+            icon128.png \
+            LICENSE \
+            README.md \
+            --exclude "*.git*"
+
+          echo "zip_name=$ZIP_NAME" >> "$GITHUB_ENV"
+          echo "Built: $(du -sh $ZIP_NAME)"
+
+      # 6. Commit updated manifest.json back to main
+      - name: Commit version bump
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "chore: bump version to v${{ steps.bump_version.outputs.new_version }} [skip ci]"
+          git push origin HEAD:main
+
+      # 7. Create an annotated git tag for this release
+      - name: Tag release
+        run: |
+          TAG="v${{ steps.bump_version.outputs.new_version }}"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      # 8. Publish GitHub Release with the ZIP as a downloadable asset
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: inf-scroll-pro.zip
+          tag_name: "v${{ steps.bump_version.outputs.new_version }}"
+          name: "Accessibility Companion v${{ steps.bump_version.outputs.new_version }}"
+          body: |
+            ## 🦾 Accessibility Companion — v${{ steps.bump_version.outputs.new_version }}
+
+            ### What's in this release
+            - RPwD Act / GIGW / WCAG 2.1 AA compliant Chrome Extension
+            - Multilingual UI — 10 Indian languages + English
+            - High Contrast modes (Yellow-on-Black, Inverted, Grayscale, Dark Mono)
+            - Dyslexia font, ADHD shutter, Reading ruler
+            - Screen reader (TTS) + Voice navigation commands
+            - Highlight Links, Heading markers, Keyboard focus ring
+            - Pause animations, Text-only images (alt-text overlay)
+
+            ### Installation
+            1. Download `accessibility-companion-v${{ steps.bump_version.outputs.new_version }}.zip` below
+            2. Extract the ZIP
+            3. Open Chrome → `chrome://extensions/` → Enable **Developer mode**
+            4. Click **Load unpacked** and select the extracted folder
+
+            ---
+            *Built automatically by GitHub Actions*
+          files: ${{ env.zip_name }}
           draft: false
           prerelease: false
         env:

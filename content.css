@@ -490,3 +490,101 @@
     content: "🎙️";
     font-size: 16px;
 }
+
+/* 12. High-Contrast Mode Picker Dropdown */
+.access-contrast-picker {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: rgba(10, 17, 34, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+    z-index: 2147483648;
+    overflow: hidden;
+    animation: accessSlideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.access-contrast-picker-header {
+    padding: 10px 14px 6px 14px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.access-contrast-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    user-select: none;
+}
+.access-contrast-option:last-child {
+    border-bottom: none;
+}
+.access-contrast-option:hover {
+    background: rgba(37, 99, 235, 0.2);
+}
+.access-contrast-option.selected {
+    background: rgba(37, 99, 235, 0.3);
+}
+.access-contrast-option:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: -2px;
+    background: rgba(37, 99, 235, 0.2);
+}
+
+.access-contrast-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.access-contrast-option-text {
+    flex: 1;
+}
+.access-contrast-option-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #f1f5f9;
+    line-height: 1.2;
+}
+.access-contrast-option-desc {
+    font-size: 9px;
+    color: #64748b;
+    margin-top: 1px;
+}
+
+.access-contrast-option.selected .access-contrast-option-label {
+    color: #60a5fa;
+}
+.access-contrast-check {
+    font-size: 14px;
+    color: #60a5fa;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.access-contrast-option.selected .access-contrast-check {
+    opacity: 1;
+}
+
+/* Wrapper for contrast card so picker can be positioned relative to it */
+.access-contrast-card-wrapper {
+    position: relative;
+}
+
